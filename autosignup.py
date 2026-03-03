@@ -27,6 +27,9 @@ import requests
 
 BASE_URL = "https://crossfithilversum.sportbitapp.nl/cbm/api/"
 
+# Rooster (schedule) ID: 1 = Hilversum
+ROOSTER_ID = 1
+
 # Target schedule: 0=Monday, 3=Thursday (Python weekday numbers)
 TARGET_WEEKDAYS = {0: "Monday", 3: "Thursday"}
 TARGET_TIME = "20:00"
@@ -99,7 +102,7 @@ class SportBitClient:
         """Fetch all events for a given date (YYYY-MM-DD)."""
         resp = self.session.get(
             self._url("data/events/"),
-            params={"datum": date, "rooster": 1},
+            params={"datum": date, "rooster": ROOSTER_ID},
         )
         resp.raise_for_status()
         data = resp.json()
