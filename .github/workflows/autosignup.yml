@@ -1,0 +1,28 @@
+name: CrossFit Auto Sign-Up
+
+on:
+  schedule:
+    # Midnight Amsterdam time = 23:00 UTC (winter/CET) or 22:00 UTC (summer/CEST)
+    # Run at both to cover the DST switch
+    - cron: "0 22 * * *"
+    - cron: "0 23 * * *"
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  signup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run auto sign-up
+        env:
+          SPORTBIT_USERNAME: ${{ secrets.SPORTBIT_USERNAME }}
+          SPORTBIT_PASSWORD: ${{ secrets.SPORTBIT_PASSWORD }}
+        run: python autosignup.py --live --days 7
