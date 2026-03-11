@@ -1,60 +1,60 @@
-# SportBit Auto Sign-Up
+# SportBit Auto Sign-Up for CrossFit Hilversum
 
-Automatically signs up for CrossFit Hilversum WOD classes via the SportBit API. Runs daily at midnight (Amsterdam time) through GitHub Actions.
+## Project Description
 
-Default schedule:
-- **Monday** at 20:00
-- **Wednesday** at 08:00
-- **Thursday** at 20:00
+This project automates the sign-up process for CrossFit WOD (Workout of the Day) classes at CrossFit Hilversum through the SportBit platform. It runs daily after midnight to register for predetermined weekly training slots, sends push notifications upon successful registration, and syncs events to Google Calendar.
 
-## Setup
+The automation is designed for CrossFit members who want to secure their spots in popular classes without manually checking and signing up each time registration opens.
 
-1. **Fork or clone this repo**
+## Configuration
 
-2. **Add your credentials as GitHub Actions secrets** (Settings > Secrets and variables > Actions > New repository secret):
-   - `SPORTBIT_USERNAME` — your SportBit login email/username
-   - `SPORTBIT_PASSWORD` — your SportBit password
+The following environment variables/secrets need to be configured:
 
-   Or via CLI:
-   ```bash
-   gh secret set SPORTBIT_USERNAME
-   gh secret set SPORTBIT_PASSWORD
-   ```
+### **SportBit Credentials**
+- `SPORTBIT_USERNAME` — Your SportBit login username
+- `SPORTBIT_PASSWORD` — Your SportBit login password
 
-3. **Test it** — go to the Actions tab > "CrossFit Auto Sign-Up" > "Run workflow" to trigger manually
+### **Google Calendar Integration**
+- `GOOGLE_CREDENTIALS` — Google service account credentials JSON (either raw JSON string or file path)
+- `CALENDAR_ID` — Google Calendar ID where events should be created (use "primary" for main calendar)
 
-The workflow runs every night at midnight and signs up for any scheduled classes in the next 7 days. If you're already signed up, it skips. Results are visible in the Actions log.
+### **State Management**
+- `GIST_ID` — GitHub Gist ID for storing signup state between runs
+- `GIST_TOKEN` — GitHub personal access token with gist permissions
 
-## Local usage
+### **Push Notifications**
+- `PUSHOVER_USER_KEY` — Your Pushover user key for receiving notifications
+- `PUSHOVER_API_TOKEN` — Pushover application API token
 
-```bash
-pip install requests
+### **Documentation Generation**
+- `ANTHROPIC_API_KEY` — Anthropic API key for automatic README generation (used in update_readme workflow)
 
-# Dry run (no sign-ups, just shows what it would do)
-SPORTBIT_USERNAME=you@email.com SPORTBIT_PASSWORD=yourpass python3 autosignup.py
+## Schedule
 
-# Actually sign up
-SPORTBIT_USERNAME=you@email.com SPORTBIT_PASSWORD=yourpass python3 autosignup.py --live
-```
+The auto sign-up workflow runs via GitHub Actions on the following schedule:
 
-### Options
+### **Automatic Runs**
+- **Daily at 00:01 Amsterdam time** (accounts for both CET and CEST)
+  - Winter time: `cron: "1 23 * * *"` (23:01 UTC)
+  - Summer time: `cron: "1 22 * * *"` (22:01 UTC)
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--live` | off | Actually sign up (default is dry-run) |
-| `--days N` | 7 | How many days to look ahead |
-| `--username` | env var | SportBit username |
-| `--password` | env var | SportBit password |
+### **Weekly Training Schedule**
+The script automatically signs up for these fixed weekly slots:
+- **Monday** 20:00
+- **Wednesday** 08:00
+- **Thursday** 20:00
+- **Saturday** 09:00
 
-## Customization
+### **Manual Runs**
+The workflow can also be triggered manually through the GitHub Actions UI using the "Run workflow" button.
 
-To change the schedule, edit the `SCHEDULE` list at the top of `autosignup.py`:
-
-```python
-# Weekday numbers: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun
-SCHEDULE = [
-    (0, "20:00"),  # Monday 20:00
-    (2, "08:00"),  # Wednesday 08:00
-    (3, "20:00"),  # Thursday 20:00
-]
-```
+### **How It Works**
+1. The workflow runs shortly after midnight Amsterdam time
+2. It checks for available classes in the next 8 days matching the weekly schedule
+3. For each matching slot:
+   - Skips if already signed up or manually cancelled
+   - Attempts to register if spots are available
+   - Joins waitlist if class is full
+4. Sends push notifications for successful registrations
+5. Creates Google Calendar events for confirmed spots
+6. Stores state in GitHub Gist to track registrations and manual cancellations
